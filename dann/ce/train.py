@@ -17,7 +17,7 @@ from tensorboardX import SummaryWriter
 
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
-from starter.args import get_train_test_args
+from args import get_train_test_args
 
 from tqdm import tqdm
 
