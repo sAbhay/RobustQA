@@ -4,7 +4,11 @@ import os
 from collections import OrderedDict
 import torch
 import csv
-import util
+
+import sys
+sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
+from starter import util
+
 from transformers import DistilBertTokenizerFast
 from transformers import DistilBertForQuestionAnswering
 from transformers import AdamW
@@ -13,12 +17,12 @@ from tensorboardX import SummaryWriter
 
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
-from args import get_train_test_args
+from starter.args import get_train_test_args
 
 from tqdm import tqdm
 
 import domains
-from discriminator import Discriminator, d_loss, D_KL_uniform, domains_to_one_hot
+from discriminator import Discriminator, d_loss, D_KL_uniform
 from dataset import QADataset
 
 def prepare_eval_data(dataset_dict, tokenizer):
@@ -220,7 +224,7 @@ class Trainer():
                     attention_mask = batch['attention_mask'].to(device)
                     start_positions = batch['start_positions'].to(device)
                     end_positions = batch['end_positions'].to(device)
-                    target_domains = domains_to_one_hot(batch['domains'])
+                    target_domains = domains.domains_to_one_hot(batch['domains'])
                     outputs = model(input_ids, attention_mask=attention_mask,
                                     start_positions=start_positions,
                                     end_positions=end_positions, output_hidden_states=True)
@@ -266,9 +270,10 @@ def get_dataset(args, datasets, data_dir, tokenizer, split_name):
     dataset_name=''
     for dataset in datasets:
         dataset_name += f'_{dataset}'
-        dataset_domain = domains.DATASET_DOMAINS[dataset_name]
+        subdataset_name = f'{dataset}'
+        dataset_domain = domains.DATASET_DOMAINS[subdataset_name]
         dataset_dict_curr = util.read_squad(f'{data_dir}/{dataset}')
-        dataset_dict_curr["domain"] = [dataset_domain] * len(dataset_dict["id"])
+        dataset_dict_curr["domain"] = [dataset_domain] * len(dataset_dict_curr["id"])
         dataset_dict = util.merge(dataset_dict, dataset_dict_curr)
     data_encodings = read_and_process(args, tokenizer, dataset_dict, data_dir, dataset_name, split_name)
     return QADataset(data_encodings, train=(split_name=='train')), dataset_dict
