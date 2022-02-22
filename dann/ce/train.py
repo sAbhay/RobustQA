@@ -225,13 +225,14 @@ class Trainer():
                                     start_positions=start_positions,
                                     end_positions=end_positions, output_hidden_states=True)
                     features = outputs[3][0]
-                    domain_preds = discriminator(features)
+                    domain_logits = discriminator(features)
+                    domain_preds = torch.nn.functional.softmax(domain_logits)
 
-                    loss = outputs[0] + D_KL_uniform(domain_preds)
+                    loss = outputs[0] + self.lam * D_KL_uniform(domain_preds)
                     loss.backward()
                     optim.step()
 
-                    discriminator_loss = d_loss(domain_preds, target_domains)
+                    discriminator_loss = d_loss(domain_logits, target_domains)
                     discriminator_loss.backward()
                     optimD.step()
 
@@ -279,6 +280,7 @@ def main():
     util.set_seed(args.seed)
     model = DistilBertForQuestionAnswering.from_pretrained("distilbert-base-uncased")
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
+    discriminator = Discriminator(input_size=3072, n_classes=4)
 
     if args.do_train:
         if not os.path.exists(args.save_dir):
@@ -298,7 +300,7 @@ def main():
         val_loader = DataLoader(val_dataset,
                                 batch_size=args.batch_size,
                                 sampler=SequentialSampler(val_dataset))
-        best_scores = trainer.train(model, train_loader, val_loader, val_dict)
+        best_scores = trainer.train(model, discriminator, train_loader, val_loader, val_dict)
     if args.do_eval:
         args.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         split_name = 'test' if 'test' in args.eval_dir else 'validation'
