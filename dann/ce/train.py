@@ -48,7 +48,7 @@ def prepare_eval_data(dataset_dict, tokenizer):
         # One example can give several spans, this is the index of the example containing this span of text.
         sample_index = sample_mapping[i]
         tokenized_examples["id"].append(dataset_dict["id"][sample_index])
-        tokenized_examples['domain'].append(dataset_dict['domain'][sample_index])
+        # tokenized_examples['domain'].append(dataset_dict['domain'][sample_index])
         # Set to None the offset_mapping that are not part of the context so it's easy to determine if a token
         # position is part of the context or not.
         tokenized_examples["offset_mapping"][i] = [
@@ -225,7 +225,7 @@ class Trainer():
                     attention_mask = batch['attention_mask'].to(device)
                     start_positions = batch['start_positions'].to(device)
                     end_positions = batch['end_positions'].to(device)
-                    target_domains = domains.domains_to_one_hot(batch['domains'])
+                    target_domains = domains.domains_to_one_hot(batch['domain']).to(device)
                     outputs = model(input_ids, attention_mask=attention_mask,
                                     start_positions=start_positions,
                                     end_positions=end_positions, output_hidden_states=True)
