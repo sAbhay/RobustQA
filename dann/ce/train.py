@@ -209,6 +209,7 @@ class Trainer():
     def train(self, model, discriminator, train_dataloader, eval_dataloader, val_dict):
         device = self.device
         model.to(device)
+        discriminator.to(device)
         optim = AdamW(model.parameters(), lr=self.lr)
         optimD = torch.optim.SGD(discriminator.parameters(), lr=self.disc_lr)
         global_idx = 0
@@ -286,7 +287,7 @@ def main():
     util.set_seed(args.seed)
     model = DistilBertForQuestionAnswering.from_pretrained("distilbert-base-uncased")
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
-    discriminator = Discriminator(input_size=3072, n_classes=4)
+    discriminator = Discriminator(input_size=768, n_classes=4)
 
     if args.do_train:
         if not os.path.exists(args.save_dir):
