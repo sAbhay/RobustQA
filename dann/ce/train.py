@@ -17,8 +17,9 @@ from args import get_train_test_args
 
 from tqdm import tqdm
 
-
-from discriminator import Discriminator, d_loss, D_KL_uniform
+import domains
+from discriminator import Discriminator, d_loss, D_KL_uniform, domains_to_one_hot
+from dataset import QADataset
 
 def prepare_eval_data(dataset_dict, tokenizer):
     tokenized_examples = tokenizer(dataset_dict['question'],
@@ -42,6 +43,7 @@ def prepare_eval_data(dataset_dict, tokenizer):
         # One example can give several spans, this is the index of the example containing this span of text.
         sample_index = sample_mapping[i]
         tokenized_examples["id"].append(dataset_dict["id"][sample_index])
+        tokenized_examples['domain'].append(dataset_dict['domain'][sample_index])
         # Set to None the offset_mapping that are not part of the context so it's easy to determine if a token
         # position is part of the context or not.
         tokenized_examples["offset_mapping"][i] = [
@@ -69,6 +71,7 @@ def prepare_train_data(dataset_dict, tokenizer):
     tokenized_examples["start_positions"] = []
     tokenized_examples["end_positions"] = []
     tokenized_examples['id'] = []
+    tokenized_examples['domain'] = []
     inaccurate = 0
     for i, offsets in enumerate(tqdm(offset_mapping)):
         # We will label impossible answers with the index of the CLS token.
@@ -81,6 +84,7 @@ def prepare_train_data(dataset_dict, tokenizer):
         # One example can give several spans, this is the index of the example containing this span of text.
         sample_index = sample_mapping[i]
         answer = dataset_dict['answer'][sample_index]
+        tokenized_examples['domain'].append(dataset_dict['domain'][sample_index])
         # Start/end character index of the answer in the text.
         start_char = answer['answer_start'][0]
         end_char = start_char + len(answer['text'][0])
@@ -216,6 +220,7 @@ class Trainer():
                     attention_mask = batch['attention_mask'].to(device)
                     start_positions = batch['start_positions'].to(device)
                     end_positions = batch['end_positions'].to(device)
+                    target_domains = domains_to_one_hot(batch['domains'])
                     outputs = model(input_ids, attention_mask=attention_mask,
                                     start_positions=start_positions,
                                     end_positions=end_positions, output_hidden_states=True)
@@ -226,7 +231,7 @@ class Trainer():
                     loss.backward()
                     optim.step()
 
-                    discriminator_loss = d_loss(domain_preds, target_domain)
+                    discriminator_loss = d_loss(domain_preds, target_domains)
                     discriminator_loss.backward()
                     optimD.step()
 
@@ -260,10 +265,12 @@ def get_dataset(args, datasets, data_dir, tokenizer, split_name):
     dataset_name=''
     for dataset in datasets:
         dataset_name += f'_{dataset}'
+        dataset_domain = domains.DATASET_DOMAINS[dataset_name]
         dataset_dict_curr = util.read_squad(f'{data_dir}/{dataset}')
+        dataset_dict_curr["domain"] = [dataset_domain] * len(dataset_dict["id"])
         dataset_dict = util.merge(dataset_dict, dataset_dict_curr)
     data_encodings = read_and_process(args, tokenizer, dataset_dict, data_dir, dataset_name, split_name)
-    return util.QADataset(data_encodings, train=(split_name=='train')), dataset_dict
+    return QADataset(data_encodings, train=(split_name=='train')), dataset_dict
 
 def main():
     # define parser and arguments
