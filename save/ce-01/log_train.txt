@@ -1,11 +1,13 @@
-[02.21.22 21:10:40] Args: {
+[02.22.22 22:50:34] Args: {
     "batch_size": 16,
+    "disc_lr": 3e-05,
     "do_eval": false,
     "do_train": true,
     "eval": false,
     "eval_datasets": "race,relation_extraction,duorc",
     "eval_dir": "datasets/oodomain_test",
     "eval_every": 5000,
+    "lam": 0.01,
     "lr": 3e-05,
     "num_epochs": 3,
     "num_visuals": 10,
@@ -20,4 +22,4 @@
     "val_dir": "datasets/indomain_val",
     "visualize_predictions": false
 }
-[02.21.22 21:10:40] Preparing Training Data...
+[02.22.22 22:50:34] Preparing Training Data...

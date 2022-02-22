@@ -6,7 +6,8 @@ import torch
 import csv
 
 import sys
-sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
+sys.path.append('/home/azureuser/RobustQA/')
+# print(sys.path)
 from starter import util
 
 from transformers import DistilBertTokenizerFast
