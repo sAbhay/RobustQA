@@ -235,10 +235,10 @@ class Trainer():
                     # [16, 384, 768]
                     # print(features.shape)
                     domain_logits = discriminator(features)
-                    domain_preds = torch.nn.functional.softmax(domain_logits)
+                    domain_preds = torch.nn.functional.softmax(domain_logits, dim=-1)
 
                     loss = outputs[0] + self.lam * D_KL_uniform(domain_preds)
-                    loss.backward()
+                    loss.backward(retain_graph=True)
                     optim.step()
 
                     discriminator_loss = d_loss(domain_logits, target_domains)
