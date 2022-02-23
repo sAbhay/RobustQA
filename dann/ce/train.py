@@ -6,8 +6,8 @@ import torch
 import csv
 
 import sys
-# sys.path.append('/home/azureuser/RobustQA/')
-sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
+sys.path.append('/home/azureuser/RobustQA/')
+# sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
 # print(sys.path)
 from starter import util
 

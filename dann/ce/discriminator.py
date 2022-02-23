@@ -24,5 +24,5 @@ def d_loss(pred, target):
 D_KL = torch.nn.KLDivLoss(size_average=None, reduce=None, reduction='batchmean', log_target=False)
 def D_KL_uniform(probs):
     log_probs = torch.log(probs)
-    uniform = F.normalize(torch.ones(log_probs.shape), p=1, dim=-1)
+    uniform = F.normalize(torch.ones(log_probs.shape), p=1, dim=-1).to(log_probs.get_device())
     return D_KL(probs, uniform)
