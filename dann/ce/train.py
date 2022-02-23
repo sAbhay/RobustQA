@@ -6,7 +6,8 @@ import torch
 import csv
 
 import sys
-sys.path.append('/home/azureuser/RobustQA/')
+# sys.path.append('/home/azureuser/RobustQA/')
+sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
 # print(sys.path)
 from starter import util
 
@@ -226,11 +227,13 @@ class Trainer():
                     attention_mask = batch['attention_mask'].to(device)
                     start_positions = batch['start_positions'].to(device)
                     end_positions = batch['end_positions'].to(device)
-                    target_domains = domains.domains_to_one_hot(batch['domain']).to(device)
+                    target_domains = torch.LongTensor(batch['domain']).to(device)
                     outputs = model(input_ids, attention_mask=attention_mask,
                                     start_positions=start_positions,
                                     end_positions=end_positions, output_hidden_states=True)
-                    features = outputs[3][0]
+                    features = torch.squeeze(outputs[3][0][:, 0, :], dim=1)
+                    # [16, 384, 768]
+                    # print(features.shape)
                     domain_logits = discriminator(features)
                     domain_preds = torch.nn.functional.softmax(domain_logits)
 

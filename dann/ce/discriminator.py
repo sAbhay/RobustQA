@@ -16,14 +16,13 @@ class Discriminator(torch.nn.Module):
         return self.net(z)
 
 
-bce = torch.nn.BCELoss()
+ce = torch.nn.CrossEntropyLoss()
 def d_loss(pred, target):
-        return bce(pred, target)
+        return ce(pred, target)
 
 
 D_KL = torch.nn.KLDivLoss(size_average=None, reduce=None, reduction='batchmean', log_target=False)
 def D_KL_uniform(probs):
     log_probs = torch.log(probs)
-    uniform = torch.ones(log_probs.shape)
-    uniform /= torch.sum(uniform, dim=-1)
+    uniform = F.normalize(torch.ones(log_probs.shape), p=1, dim=-1)
     return D_KL(probs, uniform)
