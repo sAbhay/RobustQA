@@ -2,14 +2,14 @@ import torch
 from torch.nn import functional as F
 
 class Discriminator(torch.nn.Module):
-    def __init__(self, input_size=768, n_classes=4):
+    def __init__(self, input_size=int(768*0.9), n_classes=4):
         super().__init__()
         self.net = torch.nn.Sequential(
-            torch.nn.Linear(input_size, 768),
+            torch.nn.Linear(input_size, input_size),
             torch.nn.ReLU(inplace=True),
-            torch.nn.Linear(768, 768),
+            torch.nn.Linear(input_size, input_size),
             torch.nn.ReLU(inplace=True),
-            torch.nn.Linear(768, n_classes)
+            torch.nn.Linear(input_sizep, n_classes)
         )
 
     def forward(self, z):

@@ -7,6 +7,7 @@ def get_train_test_args():
     parser.add_argument('--lr', type=float, default=3e-5)
     parser.add_argument('--disc_lr', type=float, default=3e-5)
     parser.add_argument('--lam', type=float, default=0.01)
+    parser.add_argument('--beta', type=float, default=0.9)
     parser.add_argument('--num-visuals', type=int, default=10)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--save-dir', type=str, default='save/')

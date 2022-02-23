@@ -152,6 +152,7 @@ class Trainer():
         self.lr = args.lr
         self.disc_lr = args.disc_lr
         self.lam = args.lam
+        self.beta = args.beta
         self.num_epochs = args.num_epochs
         self.device = args.device
         self.eval_every = args.eval_every
@@ -231,7 +232,7 @@ class Trainer():
                     outputs = model(input_ids, attention_mask=attention_mask,
                                     start_positions=start_positions,
                                     end_positions=end_positions, output_hidden_states=True)
-                    features = torch.squeeze(outputs[3][0][:, 0, :], dim=1)
+                    features = torch.squeeze(outputs[3][0][:, 0, :], dim=1)[:, :int(768 * self.beta)]
                     # [16, 384, 768]
                     # print(features.shape)
                     domain_logits = discriminator(features)
@@ -290,7 +291,7 @@ def main():
     util.set_seed(args.seed)
     model = DistilBertForQuestionAnswering.from_pretrained("distilbert-base-uncased")
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
-    discriminator = Discriminator(input_size=768, n_classes=4)
+    discriminator = Discriminator(input_size=int(768 * args.beta), n_classes=4)
 
     if args.do_train:
         if not os.path.exists(args.save_dir):
