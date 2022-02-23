@@ -212,7 +212,7 @@ class Trainer():
         model.to(device)
         discriminator.to(device)
         optim = AdamW(model.parameters(), lr=self.lr)
-        optimD = torch.optim.SGD(discriminator.parameters(), lr=self.disc_lr)
+        optimD = AdamW(discriminator.parameters(), lr=self.disc_lr)
         global_idx = 0
         best_scores = {'F1': -1.0, 'EM': -1.0}
         tbx = SummaryWriter(self.save_dir)
