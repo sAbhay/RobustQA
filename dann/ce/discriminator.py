@@ -9,7 +9,7 @@ class Discriminator(torch.nn.Module):
             torch.nn.ReLU(inplace=True),
             torch.nn.Linear(input_size, input_size),
             torch.nn.ReLU(inplace=True),
-            torch.nn.Linear(input_sizep, n_classes)
+            torch.nn.Linear(input_size, n_classes)
         )
 
     def forward(self, z):
