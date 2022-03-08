@@ -6,8 +6,8 @@ import torch
 import csv
 
 import sys
-sys.path.append('/home/azureuser/RobustQA/')
-# sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
+# sys.path.append('/home/azureuser/RobustQA/')
+sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
 # print(sys.path)
 from starter import util
 
@@ -24,7 +24,7 @@ from args import get_train_test_args
 from tqdm import tqdm
 
 import domains
-from discriminator import Discriminator, d_loss, D_KL_uniform
+from discriminator import Discriminator, d_loss, D_KL_uniform, loss_wasserstein_gp_d
 from dataset import QADataset
 
 def prepare_eval_data(dataset_dict, tokenizer):
@@ -236,9 +236,9 @@ class Trainer():
                     # [16, 384, 768]
                     # print(features.shape)
                     domain_logits = discriminator(features)
-                    domain_preds = torch.nn.functional.softmax(domain_logits, dim=-1)
+                    # domain_preds = torch.nn.functional.softmax(domain_logits, dim=-1)
 
-                    loss = outputs[0] + self.lam * D_KL_uniform(domain_preds)
+                    loss = outputs[0] + self.lam * loss_wasserstein_gp_d(domain_logits)
                     loss.backward(retain_graph=True)
                     optim.step()
 
