@@ -1,6 +1,8 @@
 import torch
 from torch.nn import functional as F
 from wasserstein.layers import SinkhornDistance
+from focalloss import FocalLoss
+from args import get_train_test_args
 
 class Discriminator(torch.nn.Module):
     def __init__(self, input_size=int(768*0.9), n_classes=4):
@@ -17,9 +19,15 @@ class Discriminator(torch.nn.Module):
         return self.net(z)
 
 
-ce = torch.nn.CrossEntropyLoss()
+# ce = torch.nn.CrossEntropyLoss()
+# def d_loss(pred, target):
+#         return ce(pred, target)
+
+args = get_train_test_args()
+gamma = args.gamma
+alpha = args.alpha
 def d_loss(pred, target):
-        return ce(pred, target)
+        return FocalLoss(gamma=gamma, alpha=alpha)(pred, target)
 
 
 D_KL = torch.nn.KLDivLoss(size_average=None, reduce=None, reduction='batchmean', log_target=False)
