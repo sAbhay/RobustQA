@@ -3,4 +3,4 @@
 	url = https://github.com/michiyasunaga/robustqa.git
 [submodule "dann/ce/wasserstein"]
 	path = dann/ce/wasserstein
-	url = https://github.com/dfdazac/wassdistance.git
+	url = https://github.com/sAbhay/wassdistance.git
