@@ -7,7 +7,7 @@ def get_train_test_args():
     parser.add_argument('--lr', type=float, default=3e-5)
     parser.add_argument('--disc_lr', type=float, default=3e-5)
     parser.add_argument('--lam', type=float, default=0.01)
-    parser.add_argument('--beta', type=float, default=0.9)
+    parser.add_argument('--beta', type=float, default=0.95)
     parser.add_argument('--gamma', type=float, default=2.0)
     parser.add_argument('--alpha', type=float, default=0.25)
     parser.add_argument('--num-visuals', type=int, default=10)
