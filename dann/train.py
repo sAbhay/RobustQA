@@ -138,7 +138,7 @@ def read_and_process(args, tokenizer, dataset_dict, dir_name, dataset_name, spli
     #TODO: cache this if possible
     cache_path = f'{dir_name}/{dataset_name}_encodings.pt'
     weights_path = f'{dir_name}/{dataset_name}_weights.pt'
-    if os.path.exists(cache_path) and not args.recompute_features:
+    if os.path.exists(cache_path) and not args.recompute_features and not (split == 'train' and not os.path.exists(weights_path)):
         tokenized_examples = util.load_pickle(cache_path)
         if split == 'train':
             weights = util.load_pickle(weights_path)
