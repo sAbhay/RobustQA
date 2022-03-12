@@ -94,6 +94,7 @@ def prepare_train_data(dataset_dict, tokenizer):
         answer = dataset_dict['answer'][sample_index]
         tokenized_examples['domain'].append(dataset_dict['domain'][sample_index])
         weights.append(domains.class_weights[dataset_dict['domain'][sample_index]])
+        # print(domains.class_weights[dataset_dict['domain'][sample_index]])
         # Start/end character index of the answer in the text.
         start_char = answer['answer_start'][0]
         end_char = start_char + len(answer['text'][0])
