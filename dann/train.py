@@ -6,8 +6,8 @@ import torch
 import csv
 
 import sys
-# sys.path.append('/home/azureuser/RobustQA/')
-sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
+sys.path.append('/home/azureuser/RobustQA/')
+# sys.path.append(r'C:\Users\abhay\Documents\Stanford\CS224N\project')
 # print(sys.path)
 from starter import util
 
@@ -19,6 +19,7 @@ from tensorboardX import SummaryWriter
 
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
+from torch.utils.data import WeightedRandomSampler
 from args import get_train_test_args
 
 from tqdm import tqdm
@@ -78,6 +79,7 @@ def prepare_train_data(dataset_dict, tokenizer):
     tokenized_examples["end_positions"] = []
     tokenized_examples['id'] = []
     tokenized_examples['domain'] = []
+    weights = []
     inaccurate = 0
     for i, offsets in enumerate(tqdm(offset_mapping)):
         # We will label impossible answers with the index of the CLS token.
@@ -91,6 +93,7 @@ def prepare_train_data(dataset_dict, tokenizer):
         sample_index = sample_mapping[i]
         answer = dataset_dict['answer'][sample_index]
         tokenized_examples['domain'].append(dataset_dict['domain'][sample_index])
+        weights.append(domains.class_weights[dataset_dict['domain'][sample_index]])
         # Start/end character index of the answer in the text.
         start_char = answer['answer_start'][0]
         end_char = start_char + len(answer['text'][0])
@@ -127,22 +130,26 @@ def prepare_train_data(dataset_dict, tokenizer):
 
     total = len(tokenized_examples['id'])
     print(f"Preprocessing not completely accurate for {inaccurate}/{total} instances")
-    return tokenized_examples
+    return tokenized_examples, weights
 
 
 
 def read_and_process(args, tokenizer, dataset_dict, dir_name, dataset_name, split):
     #TODO: cache this if possible
     cache_path = f'{dir_name}/{dataset_name}_encodings.pt'
+    weights_path = f'{dir_name}/{dataset_name}_weights.pt'
     if os.path.exists(cache_path) and not args.recompute_features:
         tokenized_examples = util.load_pickle(cache_path)
+        if split == 'train':
+            weights = util.load_pickle(weights_path)
     else:
         if split=='train':
-            tokenized_examples = prepare_train_data(dataset_dict, tokenizer)
+            tokenized_examples, weights = prepare_train_data(dataset_dict, tokenizer)
+            util.save_pickle(tokenized_examples, weights_path)
         else:
             tokenized_examples = prepare_eval_data(dataset_dict, tokenizer)
         util.save_pickle(tokenized_examples, cache_path)
-    return tokenized_examples
+    return tokenized_examples, weights
 
 
 
@@ -281,8 +288,8 @@ def get_dataset(args, datasets, data_dir, tokenizer, split_name):
         dataset_dict_curr = util.read_squad(f'{data_dir}/{dataset}')
         dataset_dict_curr["domain"] = [dataset_domain] * len(dataset_dict_curr["id"])
         dataset_dict = util.merge(dataset_dict, dataset_dict_curr)
-    data_encodings = read_and_process(args, tokenizer, dataset_dict, data_dir, dataset_name, split_name)
-    return QADataset(data_encodings, train=(split_name=='train')), dataset_dict
+    data_encodings, weights = read_and_process(args, tokenizer, dataset_dict, data_dir, dataset_name, split_name)
+    return QADataset(data_encodings, train=(split_name=='train')), dataset_dict, weights
 
 def main():
     # define parser and arguments
@@ -302,12 +309,12 @@ def main():
         log.info("Preparing Training Data...")
         args.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         trainer = Trainer(args, log)
-        train_dataset, _ = get_dataset(args, args.train_datasets, args.train_dir, tokenizer, 'train')
+        train_dataset, _, weights = get_dataset(args, args.train_datasets, args.train_dir, tokenizer, 'train')
         log.info("Preparing Validation Data...")
-        val_dataset, val_dict = get_dataset(args, args.train_datasets, args.val_dir, tokenizer, 'val')
+        val_dataset, val_dict, _ = get_dataset(args, args.train_datasets, args.val_dir, tokenizer, 'val')
         train_loader = DataLoader(train_dataset,
                                 batch_size=args.batch_size,
-                                sampler=RandomSampler(train_dataset))
+                                sampler=WeightedRandomSampler(weights, len(weights)))
         val_loader = DataLoader(val_dataset,
                                 batch_size=args.batch_size,
                                 sampler=SequentialSampler(val_dataset))
@@ -320,7 +327,7 @@ def main():
         checkpoint_path = os.path.join(args.save_dir, 'checkpoint')
         model = DistilBertForQuestionAnswering.from_pretrained(checkpoint_path)
         model.to(args.device)
-        eval_dataset, eval_dict = get_dataset(args, args.eval_datasets, args.eval_dir, tokenizer, split_name)
+        eval_dataset, eval_dict, _ = get_dataset(args, args.eval_datasets, args.eval_dir, tokenizer, split_name)
         eval_loader = DataLoader(eval_dataset,
                                  batch_size=args.batch_size,
                                  sampler=SequentialSampler(eval_dataset))
