@@ -245,9 +245,9 @@ class Trainer():
                     # [16, 384, 768]
                     # print(features.shape)
                     domain_logits = discriminator(features)
-                    # domain_preds = torch.nn.functional.softmax(domain_logits, dim=-1)
+                    domain_preds = torch.nn.functional.softmax(domain_logits, dim=-1)
 
-                    loss = outputs[0] + self.lam * loss_wasserstein_gp_d(domain_logits)
+                    loss = outputs[0] + self.lam * D_KL_uniform(domain_preds)
                     loss.backward(retain_graph=True)
                     optim.step()
 
@@ -313,7 +313,7 @@ def main():
         trainer = Trainer(args, log)
         train_dataset, _, weights = get_dataset(args, args.train_datasets, args.train_dir, tokenizer, 'train')
         log.info("Preparing Validation Data...")
-        val_dataset, val_dict, _ = get_dataset(args, args.train_datasets, args.val_dir, tokenizer, 'val')
+        val_dataset, val_dict, _ = get_dataset(args, args.eval_datasets, args.val_dir, tokenizer, 'val')
         train_loader = DataLoader(train_dataset,
                                 batch_size=args.batch_size,
                                 sampler=WeightedRandomSampler(weights, len(weights)))
