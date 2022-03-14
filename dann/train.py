@@ -25,7 +25,7 @@ from args import get_train_test_args
 from tqdm import tqdm
 
 import domains
-from discriminator import Discriminator, d_loss, D_KL_uniform, loss_wasserstein_gp_d
+from discriminator import D_KL, Discriminator, d_loss, D_KL_uniform, loss_wasserstein_gp_d
 from dataset import QADataset
 
 def prepare_eval_data(dataset_dict, tokenizer):
@@ -245,9 +245,9 @@ class Trainer():
                     # [16, 384, 768]
                     # print(features.shape)
                     domain_logits = discriminator(features)
-                    domain_preds = torch.nn.functional.softmax(domain_logits, dim=-1)
+                    # domain_preds = torch.nn.functional.softmax(domain_logits, dim=-1)
 
-                    loss = outputs[0] + self.lam * D_KL_uniform(domain_preds)
+                    loss = outputs[0] + self.lam * loss_wasserstein_gp_d(domain_logits)
                     loss.backward(retain_graph=True)
                     optim.step()
 
@@ -316,7 +316,7 @@ def main():
         val_dataset, val_dict, _ = get_dataset(args, args.eval_datasets, args.val_dir, tokenizer, 'val')
         train_loader = DataLoader(train_dataset,
                                 batch_size=args.batch_size,
-                                sampler=WeightedRandomSampler(weights, len(weights)))
+                                sampler=RandomSampler(train_dataset))
         val_loader = DataLoader(val_dataset,
                                 batch_size=args.batch_size,
                                 sampler=SequentialSampler(val_dataset))

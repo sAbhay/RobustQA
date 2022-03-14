@@ -38,7 +38,7 @@ def D_KL_uniform(probs):
 
 
 def loss_wasserstein_gp_d(logits):
-    sinkhorn = SinkhornDistance(eps=0.1, max_iter=100, device=logits.get_device(), reduction=None)
+    sinkhorn = SinkhornDistance(eps=0.01, max_iter=100, device=logits.get_device(), reduction=None)
     uniform = F.normalize(torch.ones(logits.shape), p=1, dim=-1).to(logits.get_device())
     dist, P, C = sinkhorn(logits, uniform)
     return dist
